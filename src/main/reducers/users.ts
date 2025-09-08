@@ -3,6 +3,7 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
+import { dispatch, getState, type RootState } from "../store.ts";
 
 interface User {
   firstName: string;
@@ -31,6 +32,7 @@ const userAdapter = createEntityAdapter({
   sortComparer: (a, b) =>
     new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime(),
 });
+
 const initialState = userAdapter.getInitialState();
 
 const usersSlice = createSlice({
@@ -83,7 +85,77 @@ const usersSlice = createSlice({
         });
       }
     },
+
+    userDeleted: (state, action: PayloadAction<UserIdentity>) => {
+      userAdapter.removeOne(state, action.payload.aadhaar);
+    },
+
+    userLoggedIn: (state, action: PayloadAction<UserIdentity>) => {
+      const existingUser = selectUserByAadhaar(
+        state,
+        action.payload.aadhaar,
+      );
+
+      if (existingUser) {
+        userAdapter.updateOne(state, {
+          id: action.payload.aadhaar,
+          changes: {
+            isLoggedIn: true,
+            lastLogin: new Date().toISOString(),
+          },
+        });
+      }
+    },
+
+    userLoggedOut: (state, action: PayloadAction<UserIdentity>) => {
+      const existingUser = selectUserByAadhaar(
+        state,
+        action.payload.aadhaar,
+      );
+
+      if (existingUser) {
+        userAdapter.updateOne(state, {
+          id: action.payload.aadhaar,
+          changes: {
+            isLoggedIn: false,
+          },
+        });
+      }
+    },
+
+    userPromoted: (state, action: PayloadAction<UserIdentity>) => {
+      const existingUser = selectUserByAadhaar(
+        state,
+        action.payload.aadhaar,
+      );
+
+      if (existingUser) {
+        userAdapter.updateOne(state, {
+          id: action.payload.aadhaar,
+          changes: {
+            isAdmin: true,
+          },
+        });
+      }
+    },
+
+    userDemoted: (state, action: PayloadAction<UserIdentity>) => {
+      const existingUser = selectUserByAadhaar(
+        state,
+        action.payload.aadhaar,
+      );
+
+      if (existingUser) {
+        userAdapter.updateOne(state, {
+          id: action.payload.aadhaar,
+          changes: {
+            isAdmin: false,
+          },
+        });
+      }
+    },
   },
+
   selectors: {
     selectUserByEmail: (state, email: string) =>
       selectAllUsers(state).find((user) => user.email === email),
@@ -104,4 +176,31 @@ export const { selectById: selectUserById, selectAll: selectAllUsers } =
 export const { selectUserByEmail, selectUserByAccount, selectUserByAadhaar } =
   usersSlice.getSelectors();
 
-export const { userAdded, userUpdated } = usersSlice.actions;
+export const {
+  userAdded,
+  userUpdated,
+  userDeleted,
+  userLoggedIn,
+  userLoggedOut,
+} = usersSlice.actions;
+
+export const selectCurrentUser = (state: RootState) =>
+  selectUserByAadhaar(state.users, state.currentUser);
+
+export function prmoteUser(aadhaar: string) {
+  const currentUser = selectCurrentUser(getState());
+  if (
+    currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar
+  ) {
+    dispatch(usersSlice.actions.userPromoted({ aadhaar }));
+  }
+}
+
+export function demoteUser(aadhaar: string) {
+  const currentUser = selectCurrentUser(getState());
+  if (
+    currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar
+  ) {
+    dispatch(usersSlice.actions.userDemoted({ aadhaar }));
+  }
+}

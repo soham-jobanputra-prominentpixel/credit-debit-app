@@ -21,10 +21,12 @@ export const store = configureStore({
 store.subscribe(async () => {
   await setTimeout(() => {
     localStorage.setItem("reduxStore", JSON.stringify(store.getState()));
-    sessionStorage.setItem("currentUser", store.getState().currentUser);
   }, 400);
 });
 
 export type AppStore = typeof store;
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
+
+export const getState = store.getState
+export const dispatch = store.dispatch
