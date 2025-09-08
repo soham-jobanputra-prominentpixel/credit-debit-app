@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Provider store={store}>
-        <BrowserRouter>
+        <BrowserRouter basename="credi-debit-app">
           <Routes>
             <Route element={<MainLayout />}>
               <Route index element={<SignupForm />} />
