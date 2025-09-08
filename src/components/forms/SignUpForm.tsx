@@ -57,7 +57,7 @@ export default function SignupForm() {
             password,
           },
         ));
-        navigate('/login')
+        navigate("/login");
       }}
     >
       <Form className="space-y-4 max-w-md mx-auto">

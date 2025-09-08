@@ -6,7 +6,7 @@ import {
 import { type AppDispatch, type RootState } from "../store.ts";
 import { makeTransaction, transactionAdded } from "./transactions.ts";
 
-interface User {
+export interface User {
   firstName: string;
   lastName: string;
   email: string;
@@ -76,14 +76,18 @@ const usersSlice = createSlice({
 
     userUpdated: (
       state,
-      action: PayloadAction<{ identity: UserIdentity; updates: UserUpdate }>,
+      action: PayloadAction<{ identity: UserIdentity; updates: UserUpdate }>
     ) => {
       const existingUser = selectUserByEmail(
         state,
-        action.payload.updates.email,
+        action.payload.updates.email
       );
+      const user = selectUserByAadhaar(state, action.payload.identity.aadhaar);
 
-      if (!existingUser) {
+      if (
+        (existingUser && user && existingUser.aadhaar === user.aadhaar) ||
+        existingUser?.isAdmin
+      ) {
         userAdapter.updateOne(state, {
           id: action.payload.identity.aadhaar,
           changes: action.payload.updates,
@@ -150,7 +154,7 @@ const usersSlice = createSlice({
 
     userCredited: (
       state,
-      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>
     ) => {
       const { userId } = action.payload;
       const existingUser = selectUserByAadhaar(state, userId.aadhaar);
@@ -165,14 +169,17 @@ const usersSlice = createSlice({
 
     userDebited: (
       state,
-      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>
     ) => {
       const { userId } = action.payload;
       const existingUser = selectUserByAadhaar(
         state,
-        action.payload.userId.aadhaar,
+        action.payload.userId.aadhaar
       );
-      if (existingUser && existingUser.balance >= action.payload.amount) {
+      if (
+        (existingUser && existingUser.balance >= action.payload.amount) ||
+        (existingUser && !existingUser?.isAdmin)
+      ) {
         const { amount } = action.payload;
         userAdapter.updateOne(state, {
           id: userId.aadhaar,
@@ -255,7 +262,7 @@ export function makePayment(account: string, amount: number) {
     const currentUser = selectCurrentUser(getState());
     if (currentUser) {
       dispatch(
-        makeTransaction({ account: currentUser.account }, { account }, amount),
+        makeTransaction({ account: currentUser.account }, { account }, amount)
       );
     }
   };

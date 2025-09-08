@@ -2,13 +2,19 @@ import { configureStore } from "@reduxjs/toolkit";
 import { usersReducer } from "./reducers/users.ts";
 import { currentUserReducer } from "./reducers/currentUser.ts";
 import { transactionsReducer } from "./reducers/transactions.ts";
+import { initialData } from "../initialData.ts";
 
 function loadState(): unknown {
   const serializedState = localStorage.getItem("reduxStore");
   if (serializedState === null) {
-    return;
+    localStorage.setItem("reduxStore", JSON.stringify(initialData));
+    sessionStorage.setItem("currentUser", initialData.currentUser);
+    return initialData;
   }
-  return JSON.parse(serializedState);
+  const state = JSON.parse(serializedState);
+  state.currentUser =
+    (sessionStorage.getItem("currentUser") as string | null) ?? "";
+  return state;
 }
 
 export const store = configureStore({

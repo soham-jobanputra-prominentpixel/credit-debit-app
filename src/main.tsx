@@ -8,6 +8,10 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import MainLayout from "./layouts/MainLayout.tsx";
 import SignupForm from "./components/forms/SignUpForm.tsx";
 import LoginForm from "./components/forms/LoginForm.tsx";
+import ProtectedRoute from "./ProtectedRoute.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
+import UsersPage from "./pages/UsersPage.tsx";
+import EditUserPage from "./pages/EditUserPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -18,6 +22,14 @@ createRoot(document.getElementById("root")!).render(
             <Route element={<MainLayout />}>
               <Route index element={<SignupForm />} />
               <Route path="/login" element={<LoginForm />} />
+              <Route path="/edit/:userId" element={<EditUserPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/admin" element={<Dashboard />} />
+                  <Route path="/users" element={<UsersPage />} />
+                </Route>
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>
