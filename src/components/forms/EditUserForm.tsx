@@ -1,4 +1,4 @@
-import { Formik, Form } from "formik";
+import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { InputField } from "../InputField.tsx";
 import { Button } from "../ui/button.tsx";
@@ -9,10 +9,14 @@ interface EditUserFormProps {
     lastName: string;
     email: string;
   };
-  onSubmit: (values: { firstName: string; lastName: string; email: string }) => void;
+  onSubmit: (
+    values: { firstName: string; lastName: string; email: string },
+  ) => void;
 }
 
-export default function EditUserForm({ initialValues, onSubmit }: EditUserFormProps) {
+export default function EditUserForm(
+  { initialValues, onSubmit }: EditUserFormProps,
+) {
   const validationSchema = Yup.object({
     firstName: Yup.string()
       .required("First name is required")

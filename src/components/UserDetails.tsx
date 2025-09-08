@@ -89,7 +89,7 @@ export function UserDetails({ user }: UserDetailsProps) {
           <p className="text-sm text-muted-foreground">Last Login</p>
           <p className="font-medium">{formatDate(user.lastLogin)}</p>
           <Link to={`/edit/${user.account}`}>Edit</Link>
-        </div> 
+        </div>
       </CardContent>
     </Card>
   );

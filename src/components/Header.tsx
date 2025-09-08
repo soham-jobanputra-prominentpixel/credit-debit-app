@@ -24,10 +24,24 @@ export default function Header() {
           )}
         >
           {user && user.isAdmin
-            ? <Link to="/admin" style={{textDecoration: "none", color: "white"}}>Credit Debit App</Link>
+            ? (
+              <Link
+                to="/admin"
+                style={{ textDecoration: "none", color: "white" }}
+              >
+                Credit Debit App
+              </Link>
+            )
             : ""}
           {user && !user.isAdmin
-            ? <Link to="/dashboard" style={{textDecoration: "none", color: "white"}}>Credit Debit App</Link>
+            ? (
+              <Link
+                to="/dashboard"
+                style={{ textDecoration: "none", color: "white" }}
+              >
+                Credit Debit App
+              </Link>
+            )
             : ""}
         </h1>
 

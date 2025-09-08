@@ -76,11 +76,11 @@ const usersSlice = createSlice({
 
     userUpdated: (
       state,
-      action: PayloadAction<{ identity: UserIdentity; updates: UserUpdate }>
+      action: PayloadAction<{ identity: UserIdentity; updates: UserUpdate }>,
     ) => {
       const existingUser = selectUserByEmail(
         state,
-        action.payload.updates.email
+        action.payload.updates.email,
       );
       const user = selectUserByAadhaar(state, action.payload.identity.aadhaar);
 
@@ -154,7 +154,7 @@ const usersSlice = createSlice({
 
     userCredited: (
       state,
-      action: PayloadAction<{ userId: UserIdentity; amount: number }>
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
     ) => {
       const { userId } = action.payload;
       const existingUser = selectUserByAadhaar(state, userId.aadhaar);
@@ -169,12 +169,12 @@ const usersSlice = createSlice({
 
     userDebited: (
       state,
-      action: PayloadAction<{ userId: UserIdentity; amount: number }>
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
     ) => {
       const { userId } = action.payload;
       const existingUser = selectUserByAadhaar(
         state,
-        action.payload.userId.aadhaar
+        action.payload.userId.aadhaar,
       );
       if (
         (existingUser && existingUser.balance >= action.payload.amount) ||
@@ -262,7 +262,7 @@ export function makePayment(account: string, amount: number) {
     const currentUser = selectCurrentUser(getState());
     if (currentUser) {
       dispatch(
-        makeTransaction({ account: currentUser.account }, { account }, amount)
+        makeTransaction({ account: currentUser.account }, { account }, amount),
       );
     }
   };
