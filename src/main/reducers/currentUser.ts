@@ -11,9 +11,9 @@ const currentUserSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(userLoggedIn, (_state, action) => {
-        const { aadhaar } = action.payload;
-        sessionStorage.setItem("currentUser", aadhaar);
-        return aadhaar;
+        const { email } = action.payload;
+        sessionStorage.setItem("currentUser", email);
+        return email;
       })
       .addCase(userLoggedOut, () => {
         sessionStorage.removeItem("currentUser");

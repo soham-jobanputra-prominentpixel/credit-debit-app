@@ -183,3 +183,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+a {
+  color: rgb(84, 84, 224);
+  text-decoration: underline;
+}

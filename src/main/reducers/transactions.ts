@@ -59,7 +59,7 @@ export function makeTransaction(
 ) {
   return function (dispatch: AppDispatch, getState: () => RootState) {
     const fromUser = selectUserByAccount(getState().users, from.account);
-    if (fromUser && fromUser.balance >= amount) {
+    if (fromUser && (fromUser.balance >= amount || fromUser.isAdmin)) {
       const toUser = selectUserByAccount(getState().users, to.account);
       if (toUser) {
         dispatch(

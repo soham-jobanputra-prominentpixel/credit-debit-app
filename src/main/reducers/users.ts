@@ -22,6 +22,8 @@ interface User {
 
 type UserUpdate = Pick<User, "firstName" | "lastName" | "email">;
 
+type UserLogin = Pick<User, "email" | "password">;
+
 type UserIdentity = Pick<User, "aadhaar">;
 
 export type UserAccount = Pick<User, "account">;
@@ -93,12 +95,12 @@ const usersSlice = createSlice({
       userAdapter.removeOne(state, action.payload.aadhaar);
     },
 
-    userLoggedIn: (state, action: PayloadAction<UserIdentity>) => {
-      const existingUser = selectUserByAadhaar(state, action.payload.aadhaar);
+    userLoggedIn: (state, action: PayloadAction<UserLogin>) => {
+      const existingUser = selectUserByEmail(state, action.payload.email);
 
-      if (existingUser) {
+      if (existingUser && existingUser.password === action.payload.password) {
         userAdapter.updateOne(state, {
-          id: action.payload.aadhaar,
+          id: existingUser.aadhaar,
           changes: {
             isLoggedIn: true,
             lastLogin: new Date().toISOString(),
@@ -228,7 +230,7 @@ export const {
 } = usersSlice.actions;
 
 export const selectCurrentUser = (state: RootState) =>
-  selectUserByAadhaar(state.users, state.currentUser);
+  selectUserByEmail(state.users, state.currentUser);
 
 export function promoteUser(aadhaar: string) {
   return function (dispatch: AppDispatch, getState: () => RootState) {
