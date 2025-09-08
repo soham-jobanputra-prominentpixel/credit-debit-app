@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { usersReducer } from "./reducers/users.ts";
 import { currentUserReducer } from "./reducers/currentUser.ts";
+import { transactionsReducer } from "./reducers/transactions.ts";
 
 function loadState(): unknown {
   const serializedState = localStorage.getItem("reduxStore");
@@ -14,6 +15,7 @@ export const store = configureStore({
   reducer: {
     users: usersReducer,
     currentUser: currentUserReducer,
+    transactions: transactionsReducer,
   },
   preloadedState: loadState(),
 });
@@ -27,6 +29,3 @@ store.subscribe(async () => {
 export type AppStore = typeof store;
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
-
-export const getState = store.getState
-export const dispatch = store.dispatch

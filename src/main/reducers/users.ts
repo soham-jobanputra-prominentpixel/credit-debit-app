@@ -3,7 +3,8 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { dispatch, getState, type RootState } from "../store.ts";
+import { type AppDispatch, type RootState } from "../store.ts";
+import { makeTransaction, transactionAdded } from "./transactions.ts";
 
 interface User {
   firstName: string;
@@ -22,6 +23,8 @@ interface User {
 type UserUpdate = Pick<User, "firstName" | "lastName" | "email">;
 
 type UserIdentity = Pick<User, "aadhaar">;
+
+export type UserAccount = Pick<User, "account">;
 
 type UserSecret = Pick<User, "password">;
 
@@ -91,10 +94,7 @@ const usersSlice = createSlice({
     },
 
     userLoggedIn: (state, action: PayloadAction<UserIdentity>) => {
-      const existingUser = selectUserByAadhaar(
-        state,
-        action.payload.aadhaar,
-      );
+      const existingUser = selectUserByAadhaar(state, action.payload.aadhaar);
 
       if (existingUser) {
         userAdapter.updateOne(state, {
@@ -108,10 +108,7 @@ const usersSlice = createSlice({
     },
 
     userLoggedOut: (state, action: PayloadAction<UserIdentity>) => {
-      const existingUser = selectUserByAadhaar(
-        state,
-        action.payload.aadhaar,
-      );
+      const existingUser = selectUserByAadhaar(state, action.payload.aadhaar);
 
       if (existingUser) {
         userAdapter.updateOne(state, {
@@ -124,10 +121,7 @@ const usersSlice = createSlice({
     },
 
     userPromoted: (state, action: PayloadAction<UserIdentity>) => {
-      const existingUser = selectUserByAadhaar(
-        state,
-        action.payload.aadhaar,
-      );
+      const existingUser = selectUserByAadhaar(state, action.payload.aadhaar);
 
       if (existingUser) {
         userAdapter.updateOne(state, {
@@ -140,10 +134,7 @@ const usersSlice = createSlice({
     },
 
     userDemoted: (state, action: PayloadAction<UserIdentity>) => {
-      const existingUser = selectUserByAadhaar(
-        state,
-        action.payload.aadhaar,
-      );
+      const existingUser = selectUserByAadhaar(state, action.payload.aadhaar);
 
       if (existingUser) {
         userAdapter.updateOne(state, {
@@ -151,6 +142,39 @@ const usersSlice = createSlice({
           changes: {
             isAdmin: false,
           },
+        });
+      }
+    },
+
+    userCredited: (
+      state,
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
+    ) => {
+      const { userId } = action.payload;
+      const existingUser = selectUserByAadhaar(state, userId.aadhaar);
+      if (existingUser) {
+        const { amount } = action.payload;
+        userAdapter.updateOne(state, {
+          id: userId.aadhaar,
+          changes: { balance: existingUser.balance + amount },
+        });
+      }
+    },
+
+    userDebited: (
+      state,
+      action: PayloadAction<{ userId: UserIdentity; amount: number }>,
+    ) => {
+      const { userId } = action.payload;
+      const existingUser = selectUserByAadhaar(
+        state,
+        action.payload.userId.aadhaar,
+      );
+      if (existingUser && existingUser.balance >= action.payload.amount) {
+        const { amount } = action.payload;
+        userAdapter.updateOne(state, {
+          id: userId.aadhaar,
+          changes: { balance: existingUser.balance - amount },
         });
       }
     },
@@ -165,6 +189,25 @@ const usersSlice = createSlice({
 
     selectUserByAadhaar: (state, aadhaar: string) =>
       selectAllUsers(state).find((user) => user.aadhaar === aadhaar),
+  },
+
+  extraReducers: (builder) => {
+    builder.addCase(transactionAdded, (state, action) => {
+      const { from, to } = action.payload;
+      const fromUser = selectUserByAccount(state, from.account);
+      const toUser = selectUserByAccount(state, to.account);
+
+      if (fromUser && toUser) {
+        userAdapter.updateOne(state, {
+          id: fromUser.aadhaar,
+          changes: { balance: fromUser.balance - action.payload.amount },
+        });
+        userAdapter.updateOne(state, {
+          id: toUser.aadhaar,
+          changes: { balance: toUser.balance + action.payload.amount },
+        });
+      }
+    });
   },
 });
 
@@ -187,20 +230,31 @@ export const {
 export const selectCurrentUser = (state: RootState) =>
   selectUserByAadhaar(state.users, state.currentUser);
 
-export function prmoteUser(aadhaar: string) {
-  const currentUser = selectCurrentUser(getState());
-  if (
-    currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar
-  ) {
-    dispatch(usersSlice.actions.userPromoted({ aadhaar }));
-  }
+export function promoteUser(aadhaar: string) {
+  return function (dispatch: AppDispatch, getState: () => RootState) {
+    const currentUser = selectCurrentUser(getState());
+    if (currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar) {
+      dispatch(usersSlice.actions.userPromoted({ aadhaar }));
+    }
+  };
 }
 
 export function demoteUser(aadhaar: string) {
-  const currentUser = selectCurrentUser(getState());
-  if (
-    currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar
-  ) {
-    dispatch(usersSlice.actions.userDemoted({ aadhaar }));
-  }
+  return function (dispatch: AppDispatch, getState: () => RootState) {
+    const currentUser = selectCurrentUser(getState());
+    if (currentUser && currentUser.isAdmin && currentUser.aadhaar !== aadhaar) {
+      dispatch(usersSlice.actions.userDemoted({ aadhaar }));
+    }
+  };
+}
+
+export function makePayment(account: string, amount: number) {
+  return function (dispatch: AppDispatch, getState: () => RootState) {
+    const currentUser = selectCurrentUser(getState());
+    if (currentUser) {
+      dispatch(
+        makeTransaction({ account: currentUser.account }, { account }, amount),
+      );
+    }
+  };
 }
